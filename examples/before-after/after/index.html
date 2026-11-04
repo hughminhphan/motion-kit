@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1080, height=1350">
+<title>After: motion kit</title>
+<!-- AFTER. Same layout and beat times as ../before; the motion is authored with assets/motion-kit.js.
+     Register: editorial / technical, no overshoot. The title settles its tracking, small text cuts on, each
+     bar grows on its own heavy curve with its count riding the top (one controller drives bar, number and
+     glow), the bars answer each other at uneven offsets, and the streak light rides the hero bar up, flashes
+     as it lands, then glints now and then instead of sitting there. The camera drifts the whole time. -->
+<link rel="stylesheet" href="assets/scene.css">
+</head>
+<body>
+<div id="root" data-composition-id="root" data-width="1080" data-height="1350" data-start="0" data-duration="5.5" data-fps="60" data-motion-blur="on" data-motion-blur-shutter="180">
+  <div id="scene"></div>
+
+  <script src="assets/gsap.min.js"></script>
+  <script src="assets/motion-kit.js"></script>
+  <script src="assets/scene.js"></script>
+  <script>
+  window.__timelines = window.__timelines || {};
+  const { F, C, dur, react, cut, trackIn, wiggle, controller, link } = MotionKit;
+  const { base, bars, hero } = SCENE;
+  const $ = (s, r = document) => r.querySelector(s);
+  gsap.set(["#eyebrow", "#title", "#foot", ".bar .val", ".bar .lbl"], { autoAlpha: 0 });
+  const tl = gsap.timeline({ paused: true });
+
+  // The camera never rests: one slow push for the whole piece, a faint handheld breath under it.
+  tl.fromTo("#cam", { scale: 1, y: 0, svgOrigin: "540 700" }, { scale: 1.03, y: -10, svgOrigin: "540 700", duration: 5.5, ease: C.drift }, 0);
+  wiggle(tl, "#rig", { x: 2.5, y: 2 }, { freq: 0.5, seed: 4 });
+
+  // Small text cuts on; the title settles its tracking. No fades, nothing rises.
+  cut(tl, "#eyebrow", 0.2);
+  trackIn(tl, "#title", 0.35, { from: "0.1em", to: "-3.2px", duration: F(54) });
+  cut(tl, "#foot", 2.2);
+
+  // Bars: each grows on a heavy curve over a duration set by its height, answering the one before at
+  // uneven offsets. One controller per bar drives the bar, its number (riding the top) and, on the hero,
+  // the haze under it and the streak on its top edge.
+  let heroCtl, heroAt, heroDur;
+  bars.forEach((b) => {
+    const g = $(`.bar[data-i="${b.i}"]`);
+    const at = 1.0 + react(b.i, 2);
+    const d = dur(b.h, 1.2);
+    const ctl = controller({ from: 0, to: b.h, at, duration: d, ease: C.heavy });
+    link(tl, ctl, g.querySelectorAll(".fill"), (v) => ({ attr: { y: base - v, height: Math.max(0.01, v) } }));
+    link(tl, ctl, $(".val", g), (v) => ({ textContent: String(Math.round((v / b.h) * b.v)), attr: { y: base - v - 26 } }));
+    cut(tl, $(".val", g), at);
+    cut(tl, $(".lbl", g), at);
+    if (b.hero) {
+      link(tl, ctl, $(".haze", g), (v) => ({ opacity: 0.55 * (v / b.h) }));
+      heroCtl = ctl; heroAt = at; heroDur = d;
+    }
+  });
+
+  // Streak: rides the hero bar's top edge on the way up, flashes as the bar lands, then settles low and
+  // glints twice. It is tied to the bar, never parked on full.
+  link(tl, heroCtl, $("#streakIn"), (v) => ({ y: hero.h - v }));
+  const land = heroAt + heroDur;
+  tl.fromTo("#streak", { autoAlpha: 0 }, { autoAlpha: 0.4, duration: F(1), ease: "none" }, heroAt);
+  tl.fromTo("#streak", { opacity: 0.4 }, { opacity: 1, duration: F(4), ease: "none", immediateRender: false }, land - F(2));
+  tl.fromTo("#streak .line", { scaleX: 0.35, transformOrigin: "50% 50%" }, { scaleX: 1, duration: F(22), ease: C.land }, land - F(2));
+  tl.fromTo("#streak .core", { scale: 1.9, transformOrigin: "50% 50%" }, { scale: 1, duration: F(30), ease: C.land }, land);
+  tl.to("#streak", { opacity: 0.32, duration: F(42), ease: C.drift }, land + F(6));
+  [3.7, 4.75].forEach((t) => {
+    tl.to("#streak", { opacity: 0.8, duration: F(7), ease: C.wind }, t);
+    tl.to("#streak", { opacity: 0.32, duration: F(36), ease: C.drift }, t + F(7));
+  });
+
+  tl.set({}, {}, 5.5);
+  window.__timelines["root"] = tl;
+  </script>
+</div>
+</body>
+</html>

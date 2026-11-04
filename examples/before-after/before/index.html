@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1080, height=1350">
+<title>Before: the house default</title>
+<!-- BEFORE. The motion an agent writes when it follows HyperFrames' animation guide as written:
+     gsap.defaults({ duration: 0.6, ease: "power3.out" }), everything fades up 24px, 0.08 s staggers,
+     the glow fades in last and parks, then a static hold. Layout and beat times match ../after. -->
+<link rel="stylesheet" href="assets/scene.css">
+</head>
+<body>
+<div id="root" data-composition-id="root" data-width="1080" data-height="1350" data-start="0" data-duration="5.5" data-fps="60">
+  <div id="scene"></div>
+
+  <script src="assets/gsap.min.js"></script>
+  <script src="assets/scene.js"></script>
+  <script>
+  window.__timelines = window.__timelines || {};
+  const { base } = SCENE;
+  gsap.defaults({ duration: 0.6, ease: "power3.out" });
+  const tl = gsap.timeline({ paused: true });
+
+  tl.from("#eyebrow", { y: 24, opacity: 0 }, 0.2);
+  tl.from("#title", { y: 24, opacity: 0 }, 0.35);
+  tl.from(".bar .fill", { attr: { y: base, height: 0 }, stagger: 0.08 }, 1.0);
+  tl.from(".bar .val", { y: 24, opacity: 0, stagger: 0.08 }, 1.2);
+  tl.from(".bar .lbl", { y: 24, opacity: 0, stagger: 0.08 }, 1.0);
+  tl.from(".haze", { opacity: 0 }, 1.6);
+  tl.from("#streak", { opacity: 0 }, 2.0);
+  tl.from("#foot", { y: 24, opacity: 0 }, 2.2);
+  tl.set({}, {}, 5.5);
+
+  window.__timelines["root"] = tl;
+  </script>
+</div>
+</body>
+</html>
